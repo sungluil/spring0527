@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="board">
+    
+    <resultMap type="com.spring.board.vo.BoardVo" id="boardVo">
+    	<result property="boardType" 	column="BOARD_TYPE"/>
+    	<result property="boardNum" 	column="BOARD_NUM"/>
+    	<result property="boardTitle" 	column="BOARD_TITLE"/>
+    	<result property="boardComment" column="BOARD_COMMENT"/>
+    	<result property="boardHits"    column="BOARD_HITS"/>
+    	<result property="createTime"   column="CREATE_TIME"/>
+    	<result property="boardRef"     column="BOARD_REF"/>
+    	<result property="boardLev"     column="BOARD_LEV"/>
+    	<result property="boardStep"    column="BOARD_STEP"/>
+    	<result property="creator"      column="CREATOR"/>
+    	<result property="fileRoot"     column="FILE_ROOT" />
+    	<result property="fileSize"     column="FILE_SIZE" />
+    	
+    	
+    	<collection property="comcodeVo"  resultMap="comcodeVo"></collection>
+    	<collection property="userinfoVo" resultMap="userinfoVo"></collection>
+<!--     	<collection property="postFileVo" resultMap="postFileVo"></collection> -->
+
+    </resultMap>
+    <resultMap type="com.spring.board.vo.ComCodeVo" id="comcodeVo">
+    	<result property="codeId"   column="CODE_ID"/>
+    	<result property="codeName" column="CODE_NAME"/>
+    	<result property="codeType" column="CODE_TYPE"/>
+    </resultMap>
+    
+    <resultMap type="com.spring.board.vo.UserInfoVo" id="userinfoVo">
+    	<result property="userId"       column="USER_ID"/>
+    	<result property="userPw"       column="USER_PW"/>
+    	<result property="userName"     column="USER_NAME"/>
+    	<result property="userPhone1"   column="USER_PHONE1"/>
+    	<result property="userPhone2"   column="USER_PHONE2"/>
+    	<result property="userPhone3"   column="USER_PHONE3"/>
+    	<result property="userAddr1"    column="USER_ADDR1"/>
+    	<result property="userAddr2"    column="USER_ADDR2"/>
+    	<result property="userCompany"  column="USER_COMPANY"/>
+    	<result property="createTime"   column="CREATE_TIME"/>
+    	<result property="sessionKey"   column="SESSIONKEY"/>
+    	<result property="sessionLimit" column="SESSIONLIMIT"/>
+    </resultMap>
+    
+    <resultMap type="com.spring.board.vo.PostFileVo" id="postFileVo">
+    	<result property="fileId"       column="FILE_ID"/>
+    	<result property="fileWriter"   column="FILE_WRITER"/>
+    	<result property="fileNum"      column="FILE_NUM"/>
+    	<result property="fileGroup"    column="FILE_GROUP"/>
+    	<result property="fileOrgName"  column="FILE_ORG_NAME"/>
+    	<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+    	<result property="fileType"     column="FILE_TYPE"/>
+    	<result property="fileSize"     column="FILE_SIZE"/>
+    	<result property="filePath"     column="FILE_PATH"/>
+    	<result property="fileRegDttm"  column="FILE_REG_DTTM"/>
+    	<result property="boardNum"     column="BOARD_NUM"/>
+    	
+    	<collection property="boardVo" resultMap="boardVo"></collection>
+    	
+    </resultMap>
+    
+    <select id="getPassword" resultMap="userinfoVo">
+    	SELECT USER_PW
+    	  FROM USER_INFO
+    	 WHERE USER_ID = #{userId}
+    	   AND USER_COMPANY = #{userCompany}
+    </select>
+    
+    <!-- 쿠키 유무에 따른 로그인 정보 조회 쿼리 -->
+    <select id="checkUserInfoCookie" resultMap="userinfoVo">
+    	SELECT USER_ID
+    		 , USER_PW
+    		 , USER_NAME
+			 , USER_PHONE1
+			 , USER_PHONE2
+			 , USER_PHONE3
+			 , USER_ADDR1
+			 , USER_ADDR2
+			 , USER_COMPANY
+			 , CREATOR
+			 , CREATE_TIME
+			 , MODIFIER
+			 , MODIFIED_TIME
+    	  FROM USER_INFO
+    	 WHERE SESSIONKEY LIKE #{SESSIONID}
+    	   AND SESSIONLIMIT > SYSDATE
+    </select>
+    <!-- 세션 아이디 저장 쿼리 -->
+    <update id="keepLogin">
+    	UPDATE USER_INFO
+    	   SET SESSIONKEY = #{SESSIONID}
+    		 , SESSIONLIMIT = #{SESSIONLIMIT}
+    	 WHERE USER_ID LIKE #{userinfo.userId}
+    </update>
+    
+    <insert id="userInsert" parameterType="com.spring.board.vo.UserInfoVo">
+    	INSERT INTO 
+        USER_INFO
+        	(
+        		USER_ID
+        	  , USER_PW
+        	  , USER_NAME
+        	  , USER_PHONE1
+        	  , USER_PHONE2
+        	  , USER_PHONE3
+        	  , USER_ADDR1
+        	  , USER_ADDR2
+        	  , USER_COMPANY
+        	  , CREATOR
+        	  , CREATE_TIME
+        	  , MODIFIER
+        	  , MODIFIED_TIME
+			)
+		VALUES
+			(
+				#{userId}
+			  , #{userPw}
+			  , #{userName}
+			  , #{userPhone1}
+			  , #{userPhone2}
+			  , #{userPhone3}
+			  , #{userAddr1}
+			  , #{userAddr2}
+			  , #{userCompany}
+			  , 'SYSTEM'
+			  , TO_CHAR(SYSDATE)
+			  , 'SYSTEM'
+			  , TO_CHAR(SYSDATE)
+			)
+    </insert>
+    
+    <select id="userinfoSelect" parameterType="com.spring.board.vo.UserInfoVo" resultMap="userinfoVo">
+    	SELECT USER_ID
+    		 , USER_PW
+    		 , USER_NAME
+    		 , USER_PHONE1
+    		 , USER_PHONE2
+    		 , USER_PHONE3
+    		 , USER_ADDR1
+    		 , USER_ADDR2
+    		 , USER_COMPANY
+    		 , CREATOR
+    		 , CREATE_TIME
+    		 , MODIFIER
+    		 , MODIFIED_TIME
+    		 , SESSIONKEY
+    		 , SESSIONLIMIT
+          FROM USER_INFO
+         WHERE USER_ID = #{userId}
+    </select>
+    
+    <select id="idcheck" parameterType="com.spring.board.vo.UserInfoVo" resultMap="userinfoVo">
+    	SELECT USER_ID
+          FROM USER_INFO
+         WHERE USER_ID = #{userId}
+    </select>
+    <select id="pwcheck" parameterType="com.spring.board.vo.UserInfoVo" resultMap="userinfoVo">
+    	SELECT USER_ID
+          FROM USER_INFO
+         WHERE USER_ID = #{userId}
+           AND USER_PW = #{userPw}
+    </select>
+    <select id="pwCheckCount" parameterType="com.spring.board.vo.UserInfoVo" resultType="int">
+    	SELECT COUNT(*)
+          FROM USER_INFO
+         WHERE USER_ID = #{userId}
+           AND USER_PW = #{userPw}
+    </select>
+    
+    <select id="boardList" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+    	SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , CODE_TYPE
+	    	 , BOARD_TYPE
+	    	 , BOARD_NUM
+	    	 , BOARD_TITLE
+	    	 , BOARD_COMMENT
+	    	 , TOTAL_CNT
+	    	 , BOARD_HITS
+	    	 , CREATE_TIME
+	    	 , BOARD_REF
+	    	 , BOARD_STEP
+	    	 , BOARD_LEV
+	    	 , CREATOR
+	    FROM
+	    	(
+	    		SELECT CODE_ID
+	    			 , CODE_NAME
+	    			 , CODE_TYPE
+	    			 , BOARD_TYPE
+	    			 , BOARD_NUM
+	    			 , BOARD_TITLE
+	    			 , BOARD_COMMENT
+	    			 , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+	    			 , COUNT(*) OVER() AS TOTAL_CNT
+	    			 , BOARD_HITS
+	    			 , BOARD.CREATE_TIME
+	    			 , BOARD_REF
+	    			 , BOARD_LEV
+	    			 , BOARD_STEP
+	    			 , BOARD.CREATOR
+	 		 	  FROM BOARD
+	 		      JOIN COM_CODE
+	   		        ON BOARD.BOARD_TYPE = COM_CODE.CODE_ID
+ 		 	  ORDER BY BOARD_REF DESC, BOARD_STEP ASC
+			)
+		WHERE NUMROW BETWEEN #{startRow } AND #{endRow }
+    </select>
+    
+    <select id="boardTotal" parameterType="Integer" resultType="Integer">
+    	SELECT COUNT(*) AS TOTAL_CNT
+		  FROM BOARD	
+    </select>
+    <select id="fileTotal" parameterType="Integer" resultType="Integer">
+    	SELECT COUNT(*) AS TOTAL_CNT
+		  FROM POST_FILE_TABLE, BOARD	
+		 WHERE POST_FILE_TABLE.BOARD_NUM = BOARD.BOARD_NUM
+		   AND BOARD.BOARD_TYPE = #{fileGroup }
+           AND BOARD.BOARD_NUM  = #{boardNum }
+    </select>
+    	
+    <select id="boardView" parameterType="com.spring.board.vo.BoardVo" resultMap="boardVo">
+    	SELECT COM_CODE.CODE_ID
+	    	 , COM_CODE.CODE_NAME
+	    	 , BOARD.BOARD_TYPE
+	    	 , BOARD.BOARD_NUM
+	    	 , BOARD.BOARD_TITLE
+	    	 , BOARD.BOARD_COMMENT
+	    	 , BOARD.BOARD_REF
+	    	 , BOARD.BOARD_LEV
+	    	 , BOARD.BOARD_STEP
+	    	 , BOARD.CREATOR
+	    	 , BOARD.CREATE_TIME
+	    	 , BOARD.FILE_ROOT
+	    	 , BOARD.FILE_SIZE
+	      FROM BOARD
+	 	  JOIN COM_CODE ON BOARD.BOARD_TYPE = COM_CODE.CODE_ID
+	     WHERE BOARD.BOARD_TYPE = #{boardType }
+	       AND BOARD.BOARD_NUM  = #{boardNum }
+    </select>	
+    <select id="fileView" parameterType="com.spring.board.vo.PostFileVo" resultMap="postFileVo">
+    	SELECT FILE_ID
+    		 , FILE_WRITER
+    		 , FILE_NUM
+    		 , FILE_GROUP
+    		 , FILE_ORG_NAME
+    		 , FILE_SAVE_NAME
+    		 , FILE_TYPE
+    		 , POST_FILE_TABLE.FILE_SIZE
+    		 , FILE_PATH
+    		 , FILE_REG_DTTM
+    		 , BOARD.BOARD_NUM
+    		 , BOARD.BOARD_TYPE
+     	  FROM POST_FILE_TABLE
+ 	      JOIN BOARD ON POST_FILE_TABLE.BOARD_NUM = BOARD.BOARD_NUM
+         WHERE BOARD.BOARD_TYPE = #{fileGroup }
+           AND BOARD.BOARD_NUM  = #{boardNum }
+    </select>	
+    
+    <select id="boardInsert" parameterType="com.spring.board.vo.BoardVo" resultMap="boardVo">
+    	INSERT INTO 
+    	BOARD
+    		(
+    			BOARD_TYPE
+			  , BOARD_NUM
+			  , BOARD_TITLE
+			  , BOARD_COMMENT
+			  , CREATOR
+			  , CREATE_TIME
+			  , MODIFIER
+			  , MODIFIED_TIME
+			  , BOARD_HITS
+			  , BOARD_REF
+			  , BOARD_STEP
+			  , BOARD_LEV
+			  , FILE_ROOT
+			 )
+		VALUES 
+			(
+				#{boardType }
+	          , (SELECT NVL(TO_NUMBER(MAX(BOARD_NUM)+1),1) FROM BOARD WHERE BOARD_TYPE = #{boardType })
+	          , #{boardTitle }
+	          , #{boardComment }
+	          , #{creator }
+	          , TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI')
+	          , 'SYSTEM'
+	          , TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI')
+	          , '0'
+	          , (SELECT NVL(TO_NUMBER(MAX(BOARD_NUM)+1),1) FROM BOARD WHERE BOARD_TYPE = #{boardType })
+	          , '0'
+	          , '0'
+	          , #{fileRoot, jdbcType=VARCHAR }
+			)
+    </select>
+    
+    <insert id="boardInsertAll" parameterType="java.util.List">
+		INSERT INTO 
+		BOARD
+			(
+				BOARD_TYPE
+		      , BOARD_NUM
+		      , BOARD_TITLE
+		      , BOARD_COMMENT
+		      , CREATOR
+		      , CREATE_TIME
+		      , MODIFIER
+		      , MODIFIED_TIME
+		      , BOARD_HITS
+		      , BOARD_REF
+		      , BOARD_STEP
+		      , BOARD_LEV
+		      , FILE_ROOT
+		      , FILE_SIZE
+		     )
+		SELECT a.* 
+		  FROM
+		  	(
+	<foreach item="item" collection="list"  separator=" UNION ALL" index="index">
+		  		SELECT #{item.boardType} as boardType
+		  			 , (SELECT NVL(TO_NUMBER(MAX(BOARD_NUM)+(#{index }+1) ),1) FROM BOARD WHERE BOARD_TYPE = #{item.boardType }) as boardNum
+		  			 , #{item.boardTitle } as boardTitle
+			         , #{item.boardComment } as boardComment
+			         , #{item.creator } as creator
+			         , TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI') as createTime
+			         , 'SYSTEM' as modifier
+			         , TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI') as modifiedTime
+			         , '0' as boardHits
+			         , (SELECT NVL(TO_NUMBER(MAX(BOARD_NUM)+(#{index }+1) ),1) FROM BOARD WHERE BOARD_TYPE = #{item.boardType }) as boardRef
+			         , '0' as boardStep
+			         , '0' as boardLev
+			         , #{item.fileRoot, jdbcType=VARCHAR }
+			         , #{item.fileSize, jdbcType=INTEGER }
+			  	  FROM DUAL
+	</foreach>
+			) a
+    </insert>
+    
+    <update id="boardUpdate" parameterType="com.spring.board.vo.BoardVo">
+    	UPDATE BOARD 
+    	   SET BOARD_TITLE = #{boardTitle }
+	         , BOARD_COMMENT = #{boardComment }
+    	 WHERE BOARD_TYPE = #{boardType }
+    	   AND BOARD_NUM  = #{boardNum }
+    </update>
+    
+    <delete id="boardDelete" parameterType="com.spring.board.vo.BoardVo" >
+    	DELETE
+    	  FROM BOARD 
+    	 WHERE BOARD_TYPE = #{boardType }
+    	   AND BOARD_NUM  = #{boardNum }
+    </delete>
+    
+    <select id="boardSearchList" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+	    SELECT CODE_ID
+	    	 , CODE_NAME 
+	    	 , BOARD_TYPE
+	    	 , BOARD_NUM
+	    	 , BOARD_TITLE
+	    	 , BOARD_COMMENT
+	    	 , TOTAL_CNT
+	    	 , BOARD_HITS
+	    	 , CREATE_TIME
+	    	 , BOARD_REF
+	    	 , BOARD_STEP
+	    	 , BOARD_LEV
+	    	 , CREATOR
+	      FROM
+	      	(
+	      		SELECT CODE_ID
+		    		 , CODE_NAME
+		    		 , BOARD_TYPE
+			    	 , BOARD_NUM
+			    	 , BOARD_TITLE
+			    	 , BOARD_COMMENT
+			    	 , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			    	 , COUNT(*) OVER() AS TOTAL_CNT
+			    	 , BOARD_HITS
+			    	 , BOARD.CREATE_TIME
+			    	 , BOARD_REF
+			    	 , BOARD_STEP
+			    	 , BOARD_LEV
+			    	 , BOARD.CREATOR
+			      FROM BOARD
+			      JOIN COM_CODE
+		            ON BOARD.BOARD_TYPE = COM_CODE.CODE_ID
+	<if test="keyList1.size != 0 ">
+   		  		 WHERE BOARD_TYPE IN
+	<foreach item="item" index="index" collection="keyList1" open="(" separator="," close=")">
+			   		   #{item}
+	</foreach>
+	</if>
+			)
+		WHERE NUMROW BETWEEN (#{pageNo}-1)*10 + 1 AND (#{pageNo})*10
+ 	 ORDER BY BOARD_REF DESC, BOARD_STEP ASC
+    </select>
+    
+	<select id="codeList" parameterType="com.spring.board.vo.ComCodeVo" resultMap="comcodeVo">
+		SELECT CODE_ID
+			 , CODE_NAME 
+			 , CODE_TYPE
+		  FROM
+		  	(
+		  		SELECT CODE_ID
+					 , CODE_NAME
+					 , CODE_TYPE
+				  FROM COM_CODE
+			 )
+    </select>
+    <update id="updateReadHits" parameterType="com.spring.board.vo.BoardVo">
+	    UPDATE BOARD
+	       SET BOARD_HITS = BOARD_HITS+1
+	     WHERE BOARD_NUM = #{boardNum}
+	       AND BOARD_TYPE = #{boardType}
+    </update>
+    
+    <insert id="boardInsertRef" parameterType="com.spring.board.vo.BoardVo">
+	    INSERT INTO
+	    BOARD
+	    	(
+	    		BOARD_TYPE
+		      , BOARD_NUM
+		      , BOARD_TITLE
+		      , BOARD_COMMENT
+		      , CREATOR
+		      , CREATE_TIME
+		      , MODIFIER
+		      , MODIFIED_TIME
+		      , BOARD_HITS
+		      , BOARD_REF
+		      , BOARD_STEP
+		      , BOARD_LEV
+	    	)
+	    VALUES
+	    	(
+	    		#{boardType}
+	    	  , (SELECT NVL(TO_NUMBER(MAX(BOARD_NUM)+1),1) FROM BOARD WHERE BOARD_TYPE = #{boardType})
+	    	  , #{boardTitle}
+	    	  , #{boardComment}
+	    	  , #{creator}
+	    	  , TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI')
+	    	  , 'SYSTEM'
+	    	  , TO_CHAR(SYSDATE)
+	    	  , '0'
+	    	  , #{boardRef}
+	    	  , #{boardStep} + 1
+	    	  , #{boardLev} + 1
+			)
+    </insert>
+    
+    <update id="boardUpdateRef" parameterType="com.spring.board.vo.BoardVo">
+	    UPDATE BOARD
+	       SET BOARD_STEP = BOARD_STEP + 1
+	     WHERE BOARD_REF  = #{boardRef}
+	       AND BOARD_STEP > #{boardStep}
+    </update>
+    
+    <insert id="postFileInsert" parameterType="com.spring.board.vo.PostFileVo">
+	    INSERT INTO 
+	    POST_FILE_TABLE
+	    	(
+	    		FILE_ID
+		      , FILE_WRITER
+		      , FILE_NUM
+		      , FILE_GROUP
+		      , FILE_ORG_NAME
+		      , FILE_SAVE_NAME
+		      , FILE_TYPE
+		      , FILE_SIZE
+		      , FILE_PATH
+		      , FILE_REG_DTTM
+		      , BOARD_NUM
+		    )
+		VALUES
+			(
+				(SELECT NVL(TO_NUMBER(MAX(FILE_ID)+1),1) FROM POST_FILE_TABLE)
+		      , #{fileWriter }
+		      ,(SELECT NVL(TO_NUMBER(MAX(FILE_NUM)+1),1) FROM POST_FILE_TABLE)
+		      , #{fileGroup }
+		      , #{fileOrgName }
+		      , #{fileSaveName }
+		      , #{fileType }
+		      , #{fileSize }
+		      , #{filePath }
+		      , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS')
+		      , (SELECT MAX(BOARD_NUM) FROM BOARD WHERE BOARD_TYPE= #{fileGroup })
+		    )
+    </insert> 
+    <insert id="postFileInsertAll" parameterType="com.spring.board.vo.PostFileVo">
+	    INSERT INTO 
+	    POST_FILE_TABLE 
+	    	(
+	    		FILE_ID
+		      , FILE_WRITER
+		      , FILE_NUM
+		      , FILE_GROUP
+		      , FILE_ORG_NAME
+		      , FILE_SAVE_NAME
+		      , FILE_TYPE
+		      , FILE_SIZE
+		      , FILE_PATH
+		      , FILE_REG_DTTM
+		      , BOARD_NUM
+		    ) 
+		SELECT a.* 
+		  FROM
+		  	(
+	<foreach item="item" collection="list"  separator=" UNION ALL" index="index">
+		  		SELECT (SELECT NVL(TO_NUMBER(MAX(FILE_ID)+(#{index }+1)),1) FROM POST_FILE_TABLE) as fileId
+		  	  , #{item.fileWriter, jdbcType=VARCHAR } as fileWriter
+		  	  , (SELECT NVL(TO_NUMBER(MAX(FILE_NUM)+(#{index }+1)),1) FROM POST_FILE_TABLE) as fileNum
+		  	  , #{item.fileGroup, jdbcType=VARCHAR } as fileGroup
+		  	  , #{item.fileOrgName, jdbcType=VARCHAR } as fileOrgName
+		  	  , #{item.fileSaveName, jdbcType=VARCHAR } as fileSaveName
+		  	  , #{item.fileType, jdbcType=VARCHAR } as fileType
+		  	  , #{item.fileSize, jdbcType=INTEGER } as fileSize
+		  	  , #{item.filePath, jdbcType=VARCHAR } as filePath
+		  	  , TO_CHAR(SYSDATE,'YYYYMMDDHH24MISS') as fileRegDttm
+		  	  , (SELECT MAX(BOARD_NUM) FROM BOARD WHERE BOARD_TYPE= #{item.fileGroup, jdbcType=VARCHAR }) as boardNum
+		 FROM DUAL
+	</foreach>
+			) a
+    </insert> 
+    
+    <select id="fileDownload" parameterType="hashMap" resultType="hashMap">
+		SELECT FILE_ORG_NAME
+	         , FILE_SAVE_NAME
+    	  FROM POST_FILE_TABLE
+         WHERE FILE_NUM = #{fileNum, jdbcType=VARCHAR }
+    </select>
+    <select id="boardNewSearch" parameterType="com.spring.board.vo.PageVo" resultMap="boardVo">
+     /* board.boardSearch */
+        SELECT BOARD_TYPE
+		  	 , BOARD_NUM
+		  	 , BOARD_TITLE
+		  	 , BOARD_COMMENT
+		  	 , TOTAL_CNT
+		  	 , CODE_NAME
+		  FROM 
+		  (
+			   SELECT BOARD_TYPE
+				    , BOARD_NUM
+				    , BOARD_TITLE
+				    , BOARD_COMMENT
+			        , ROW_NUMBER() OVER(ORDER BY BOARD_NUM DESC) AS NUMROW
+			        , COUNT(*) OVER() AS TOTAL_CNT
+			        , CODE_NAME
+				 FROM BOARD,COM_CODE	
+				WHERE BOARD.BOARD_TYPE = COM_CODE.CODE_ID
+				<choose>
+				<when test="list != null">
+					AND BOARD_TYPE IN
+					<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			        	#{item}
+			  		</foreach> 
+				</when>
+				<when test="keyword != null and keyword !='' ">
+					AND BOARD_TITLE LIKE '%'|| #{keyword,jdbcType=VARCHAR} ||'%' 
+				</when>
+				</choose>
+				<!--
+ 				<if test="list != null">
+					AND BOARD_TYPE IN
+					<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			        	#{item}
+			  		</foreach> 
+		  		</if>
+		  		 -->
+			)
+		 WHERE NUMROW BETWEEN #{startRow} AND #{endRow}
+    </select>
+    
+    <select id="boardNewSearchCnt" parameterType="Integer" resultType="Integer">
+     /* board.boardSearchCnt */
+        SELECT COUNT(*) AS TOTAL_CNT
+		  FROM BOARD
+		<choose>
+			<when test="list != null">
+				WHERE BOARD_TYPE IN
+				<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+					#{item}
+				</foreach> 
+			</when>
+			<when test="keyword != null and keyword !='' ">
+				WHERE BOARD_TITLE LIKE '%'|| #{keyword,jdbcType=VARCHAR} ||'%' 
+			</when>
+		</choose>
+		<!--	  
+ 		<if test="list != null"> 
+		 WHERE BOARD_TYPE IN
+			<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			 	#{item}
+			 </foreach> 
+		 </if>
+		 -->
+    </select>
+</mapper>

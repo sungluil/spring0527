@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+	<!-- 이메일을 전송하는 기능을 제공하는 JavaMailSenderImpl 클래스를 Spring Bean으로 등록 -->
+	<!-- => SMTP 서비스를 제공하는 서버의 정보를 JavaMailSenderImpl 클래스의 필드값으로 전달하여 저장 - Setter Injection -->
+	<bean id="javaMailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<property name="host" value="smtp.gmail.com"/>
+		<property name="port" value="587"/>
+		<property name="username" value="chosr1126@gmail.com"/>
+		<property name="password" value="whtjdfbf1!@"/>
+		<property name="javaMailProperties">
+			<props>
+				<prop key="mail.smtp.ssl.trust">smtp.gmail.com</prop>
+				<prop key="mail.smtp.starttls.enable">true</prop>
+				<prop key="mail.smtp.auth">true</prop>				
+			</props>
+		</property>
+	</bean>
+
+	<!-- 핵심관심코드가 작성된 메소드가 선언된 클래스를 Spring Bean으로 등록 -->
+	<!-- 핵심관심코드가 작성된 메소드가 선언된 클래스를 Spring Bean으로 등록 -->
+<!-- 	<bean id="emailSendBean" class="com.spring.aop.EmailSendBean"> -->
+<!-- 		<property name="mailSender" ref="javaMailSender"/> -->
+<!-- 	</bean> -->
+	<bean id="emailSender" class="com.spring.common.EmailSender">
+		<property name="mailSender" ref="javaMailSender"/>
+	</bean>
+</beans>
+
+
+
+
+
+
+
+
+
